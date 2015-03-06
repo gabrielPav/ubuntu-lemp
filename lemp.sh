@@ -127,20 +127,6 @@ sed -i 's/;session.save_path = "\/var\/lib\/php5\/sessions"/session.save_path = 
 
 sleep 5
 
-###########################
-# Install and configure VSFTPD #
-###########################
-
-# Install VSFTPD
-sudo apt-get -y install ftp vsftpd
-service vsftpd start
-
-# Configure VSFTPD
-sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' /etc/vsftpd.conf
-
-service vsftpd stop
-sleep 5
-
 ####################
 # Create user account #
 ####################
@@ -154,7 +140,9 @@ echo "$FTP_USERNAME:$FTP_USER_PASSWORD" | chpasswd
 
 # Limit FTP access only to /public_html directory
 usermod --home /var/www/html $FTP_USERNAME
-chown -R ${FTP_USERNAME}:${FTP_GROUP} /var/www
+usermod -s /bin/bash $FTP_USERNAME
+
+chown -R ${FTP_USERNAME}:${FTP_GROUP} /var/www/html
 chmod 775 /var/www/html
 
 # Create PHP session pool
@@ -162,6 +150,21 @@ mkdir -p /var/lib/php5/session
 chown -R ${FTP_USERNAME}:${FTP_GROUP} /var/lib/php5/session
 chmod 775 /var/lib/php5/session
 
+###########################
+# Install and configure VSFTPD #
+###########################
+
+# Install VSFTPD
+sudo apt-get -y install vsftpd
+service vsftpd start
+
+# Configure VSFTPD
+sed -i 's/#chroot_local_user=YES/chroot_local_user=YES/g' /etc/vsftpd.conf
+sed -i 's/#chown_uploads=YES/allow_writeable_chroot=YES/g' /etc/vsftpd.conf
+sed -i 's/#write_enable=YES/write_enable=YES/g' /etc/vsftpd.conf
+sed -i 's/#local_umask=022/local_umask=022/g' /etc/vsftpd.conf
+
+service vsftpd stop
 sleep 5
 
 ###################
