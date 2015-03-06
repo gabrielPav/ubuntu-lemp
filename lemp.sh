@@ -89,7 +89,7 @@ cd
 
 # PPA Repo for PHP 5.5 (Ubuntu 14.04 and later)
 sudo apt-get install -y software-properties-common
-sudo add-apt-repository ppa:ondrej/php5
+sudo add-apt-repository -y ppa:ondrej/php5
 sudo apt-get update && sudo apt-get -y upgrade
 
 sudo apt-get install -y php5-fpm php5-common php5-cli php5-cgi php5-dev php5-xmlrpc php5-curl php5-gd php5-xsl php5-imap php5-mysql php5-odbc php5-mcrypt php5-tidy php5-ldap php-pear php5-intl php5-pspell php5-readline php5-recode php5-sqlite php5-apcu php5-imagick php5-memcached php5-memcache
