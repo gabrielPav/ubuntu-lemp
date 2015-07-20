@@ -60,7 +60,7 @@ sudo apt-get install -y wget zip unzip
 #################################################################################################
 
 # Install dependencies
-sudo apt-get install -y build-essential zlib1g-dev libpcre3 libpcre3-dev unzip libssl-dev libgd2-xpm-dev
+sudo apt-get install -y build-essential zlib1g-dev libpcre3 libpcre3-dev unzip libssl-dev libgd2-xpm-dev git
 
 # Download ngx_pagespeed
 cd
