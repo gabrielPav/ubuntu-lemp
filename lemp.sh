@@ -8,18 +8,33 @@ fi
 
 clear
 echo "==========================================================="
-echo "LEMP web stack v1.0 for Linux Ubuntu, written by GP"
+echo "LEMP web stack v1.1 for Linux Ubuntu, written by GP"
 echo "==========================================================="
 echo "A tool to auto-compile & install Nginx+MySQL+PHP on Linux "
 echo ""
-echo "For more information please visit http://makewebfast.net"
+echo "For more information please visit https://makewebfast.com"
 echo "==========================================================="
 
+
+###########################
+# Check and update the OS #
+###########################
+clear
+echo "========================"
+echo "Updating Ubuntu System"
+echo "========================"
+sudo apt-get update && sudo apt-get -y upgrade && sudo apt-get dist-upgrade 
+
+
+###################
+# Create new user #
+###################
+
 # Dummy Credentials
-FTP_USERNAME=makewebfast
-FTP_GROUP=makewebfast
-FTP_USER_PASSWORD=makewebfast
-MYSQL_ROOT_PASSWORD=makewebfast
+FTP_USERNAME=domain.com
+FTP_GROUP=domain.com
+FTP_USER_PASSWORD=ftp.password
+MYSQL_ROOT_PASSWORD=mysql.password
 
 mkdir -p /var/www/html
 
@@ -35,36 +50,28 @@ usermod -s /bin/bash $FTP_USERNAME
 chown -R ${FTP_USERNAME}:${FTP_GROUP} /var/www/html
 chmod 775 /var/www/html
 
-# Create PHP session pool
+# Create PHP session path
 mkdir -p /var/lib/php5/session
 chown -R ${FTP_USERNAME}:${FTP_GROUP} /var/lib/php5/session
 chmod 775 /var/lib/php5/session
 
-##############
-# Update distro #
-##############
 
-clear
-echo "========================"
-echo "Updating Ubuntu System"
-echo "========================"
-sudo apt-get update && sudo apt-get -y upgrade && sudo apt-get dist-upgrade 
-
-##############################
+##################################
 # Add the necessary dependencies #
-##############################
+##################################
 sudo apt-get install -y wget zip unzip
 
-#################################################################################################
-# Install NGINX - build it from source with all necessary modules - always check for updates here: http://goo.gl/B5PteX #
-#################################################################################################
 
+###########################################################################
+# Install NGINX - build it from oficial source with all necessary modules # 
+###########################################################################
 # Install dependencies
+
 sudo apt-get install -y build-essential zlib1g-dev libpcre3 libpcre3-dev unzip libssl-dev libgd2-xpm-dev git
 
 # Download ngx_pagespeed
 cd
-NPS_VERSION=1.9.32.4
+NPS_VERSION=1.10.33.2
 wget https://github.com/pagespeed/ngx_pagespeed/archive/release-${NPS_VERSION}-beta.zip
 unzip release-${NPS_VERSION}-beta.zip
 cd ngx_pagespeed-release-${NPS_VERSION}-beta/
@@ -83,22 +90,24 @@ make install
 
 # Create / replace the Nginx configuration files
 touch /usr/local/nginx/conf/nginx.conf
-touch /usr/local/nginx/conf/makewebfast.net.conf
+touch /usr/local/nginx/conf/makewebfast.com.conf
 touch /etc/init.d/nginx
 
 wget https://raw.githubusercontent.com/gabrielPav/ubuntu-lemp/master/conf/nginx/nginx.conf -O /usr/local/nginx/conf/nginx.conf
-wget https://raw.githubusercontent.com/gabrielPav/ubuntu-lemp/master/conf/nginx/makewebfast.net.conf -O /usr/local/nginx/conf/makewebfast.net.conf
+wget https://raw.githubusercontent.com/gabrielPav/ubuntu-lemp/master/conf/nginx/makewebfast.com.conf -O /usr/local/nginx/conf/makewebfast.com.conf
 wget https://raw.githubusercontent.com/gabrielPav/ubuntu-lemp/master/conf/nginx/nginx.init.txt -O /etc/init.d/nginx
+
+# Adjust the number of CPU cores: cat /proc/cpuinfo | grep ^processor | wc -l
 
 chmod +x /etc/init.d/nginx
 sudo update-rc.d nginx defaults
-
 service nginx start
 sudo /etc/init.d/nginx status
 sudo /etc/init.d/nginx configtest
 sleep 10
 service nginx stop
 cd
+
 
 ###############################################
 # install PHP-FPM with latest PHP 5.5 version #
@@ -118,9 +127,9 @@ cat <<EOT >> /etc/php5/mods-available/opcache.ini
 opcache.enable=1
 opcache.enable_cli=0
 opcache.fast_shutdown=1
-opcache.memory_consumption=256
+opcache.memory_consumption=128
 opcache.interned_strings_buffer=8
-opcache.max_accelerated_files=8000
+opcache.max_accelerated_files=4000
 opcache.revalidate_freq=60
 EOT
 
@@ -157,9 +166,10 @@ sed -i 's/;session.save_path = "\/var\/lib\/php5\/sessions"/session.save_path = 
 
 sleep 5
 
-#####################
-# install MySQL 5.6 #
-#####################
+
+#######################
+# install MySQL 5.6.x #
+#######################
 
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password password $MYSQL_ROOT_PASSWORD'
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password $MYSQL_ROOT_PASSWORD'
@@ -172,16 +182,17 @@ sleep 5
 sudo service mysql stop
 
 
-###################
+######################
 # Install MySQLTuner #
-###################
+######################
 cd
 wget --no-check-certificate https://raw.githubusercontent.com/major/MySQLTuner-perl/master/mysqltuner.pl
 chmod +x mysqltuner.pl
 
-###########################
+
+################################
 # Install and configure VSFTPD #
-###########################
+################################
 
 # Install VSFTPD
 sudo apt-get -y install vsftpd
@@ -196,10 +207,15 @@ sed -i 's/#local_umask=022/local_umask=022/g' /etc/vsftpd.conf
 service vsftpd stop
 sleep 5
 
-###################
-# Restart key services #
-###################
+
+########################
+# Restart web services #
+########################
 clear
+echo "================"
+echo  "Start MySQL."
+echo "================"
+service mysqld start
 echo "==============="
 echo  "Start Nginx."
 echo "==============="
@@ -207,26 +223,16 @@ service nginx start
 echo "================="
 echo  "Start PHP-FPM"
 echo "================="
-service php5-fpm start
-echo "================="
-echo  "Start vsFTPd"
-echo "================="
-service vsftpd start
-
-cd
+service php-fpm start
+sleep 5
 
 # Remove the installation files
 rm -rf /root/nginx-1.8.0.tar.gz
 rm -rf /root/nginx-1.8.0
-rm -rf /root/release-1.9.32.4-beta.zip
-rm -rf /root/ngx_pagespeed-release-1.9.32.4-beta
+rm -rf /root/release-1.10.33.2-beta.zip
+rm -rf /root/ngx_pagespeed-release-1.10.33.2-beta
 
-#####################
-# Installation completed. #
-#####################
 clear
 echo "========================================"
-echo "LEMP Installation Complete!"
-echo "========================================"
-echo "The configuration is now ready for testing."
+echo "LNMP Installation Complete!"
 echo "========================================"
