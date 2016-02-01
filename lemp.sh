@@ -80,7 +80,7 @@ tar -xzvf ${NPS_VERSION}.tar.gz
 
 # Download and build nginx with all the necessary modules - check http://nginx.org/en/download.html for the latest version
 cd
-NGINX_VERSION=1.8.0
+NGINX_VERSION=1.8.1
 wget http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz
 tar -xvzf nginx-${NGINX_VERSION}.tar.gz
 cd nginx-${NGINX_VERSION}/
@@ -227,8 +227,8 @@ service php-fpm start
 sleep 5
 
 # Remove the installation files
-rm -rf /root/nginx-1.8.0.tar.gz
-rm -rf /root/nginx-1.8.0
+rm -rf /root/nginx-1.8.1.tar.gz
+rm -rf /root/nginx-1.8.1
 rm -rf /root/release-1.10.33.2-beta.zip
 rm -rf /root/ngx_pagespeed-release-1.10.33.2-beta
 
